@@ -47,6 +47,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +68,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
@@ -232,7 +234,7 @@ fun AppsScreen(
                                     Icon(Icons.Default.Search, contentDescription = null)
                                 }
                                 IconButton(onClick = {
-                                    isSelectionMode = true
+                                    isSelectionMode = !isSelectionMode
                                     selectedApps = emptySet()
                                 }) {
                                     Icon(Icons.Default.Checklist, contentDescription = null)
@@ -460,28 +462,28 @@ fun AppsScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            ExtendedFloatingActionButton(
+                            FloatingActionButton(
                                 onClick = {
                                     val allApps = (stellarApps + shizukuApps).map { it.packageInfo.packageName }
                                     selectedApps = if (selectedApps.size == allApps.size) emptySet() else allApps.toSet()
                                 },
                                 shape = AppShape.shapes.fab,
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                elevation = FloatingActionButtonDefaults.elevation(2.dp, 2.dp, 2.dp, 2.dp),
-                                icon = { Icon(Icons.Default.SelectAll, contentDescription = null, modifier = Modifier.size(22.dp)) },
-                                text = { Text(stringResource(R.string.select_all), style = MaterialTheme.typography.labelMedium) }
-                            )
-                            ExtendedFloatingActionButton(
+                                elevation = FloatingActionButtonDefaults.elevation(2.dp, 2.dp, 2.dp, 2.dp)
+                            ) {
+                                Icon(Icons.Default.SelectAll, contentDescription = null, modifier = Modifier.size(22.dp))
+                            }
+                            FloatingActionButton(
                                 onClick = {
                                     isSelectionMode = false
                                     selectedApps = emptySet()
                                 },
                                 shape = AppShape.shapes.fab,
                                 containerColor = MaterialTheme.colorScheme.errorContainer,
-                                elevation = FloatingActionButtonDefaults.elevation(2.dp, 2.dp, 2.dp, 2.dp),
-                                icon = { Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(22.dp)) },
-                                text = { Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium) }
-                            )
+                                elevation = FloatingActionButtonDefaults.elevation(2.dp, 2.dp, 2.dp, 2.dp)
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(22.dp))
+                            }
                         }
                     }
 
@@ -733,6 +735,18 @@ fun AppListItem(
         targetValue = if (isSelectionMode) 48.dp else 0.dp,
         label = "cardPadding"
     )
+    val statusOffsetX by animateDpAsState(
+        targetValue = if (isSelectionMode) 32.dp else 0.dp,
+        label = "statusOffset"
+    )
+    val chevronOffsetX by animateDpAsState(
+        targetValue = if (isSelectionMode) 16.dp else 0.dp,
+        label = "chevronOffset"
+    )
+    val chevronAlpha by animateFloatAsState(
+        targetValue = if (isSelectionMode) 0f else 1f,
+        label = "chevronAlpha"
+    )
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Card(
@@ -804,7 +818,8 @@ fun AppListItem(
                         else -> stringResource(R.string.unknown)
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.offset(x = statusOffsetX)
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -813,7 +828,11 @@ fun AppListItem(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.rotate(rotation).size(24.dp)
+                    modifier = Modifier
+                        .offset(x = chevronOffsetX)
+                        .alpha(chevronAlpha)
+                        .rotate(rotation)
+                        .size(24.dp)
                 )
             }
 
