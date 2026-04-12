@@ -153,9 +153,6 @@ fun TerminalScreen(
                 )
                 commands = commands + newCommand
                 scope.launch { saveCommands(context, commands) }
-                if (mode == CommandMode.CLICK_EXECUTE) {
-                    terminalViewModel.executeCommand(command)
-                }
                 showCreateDialog = false
             }
         )
@@ -400,7 +397,7 @@ private fun CreateCommandDialog(
     StellarDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.create_command),
-        confirmText = if (selectedMode == CommandMode.CLICK_EXECUTE) stringResource(R.string.execute) else stringResource(R.string.save),
+        confirmText = stringResource(R.string.save),
         confirmEnabled = command.isNotBlank(),
         onConfirm = { onConfirm(title.ifBlank { command.take(20) }, command, selectedMode) },
         onDismiss = onDismiss
