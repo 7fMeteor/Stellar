@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -153,9 +154,6 @@ fun TerminalScreen(
                 )
                 commands = commands + newCommand
                 scope.launch { saveCommands(context, commands) }
-                if (mode == CommandMode.CLICK_EXECUTE) {
-                    terminalViewModel.executeCommand(command)
-                }
                 showCreateDialog = false
             }
         )
@@ -188,7 +186,8 @@ fun TerminalScreen(
     if (state.showResultDialog) {
         ExecutionResultDialog(
             state = state,
-            onDismiss = { terminalViewModel.dismissDialog() }
+            onDismiss = { terminalViewModel.dismissDialog() },
+            terminalViewModel = terminalViewModel
         )
     }
 }
@@ -400,7 +399,7 @@ private fun CreateCommandDialog(
     StellarDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.create_command),
-        confirmText = if (selectedMode == CommandMode.CLICK_EXECUTE) stringResource(R.string.execute) else stringResource(R.string.save),
+        confirmText = stringResource(R.string.save),
         confirmEnabled = command.isNotBlank(),
         onConfirm = { onConfirm(title.ifBlank { command.take(20) }, command, selectedMode) },
         onDismiss = onDismiss
@@ -612,7 +611,8 @@ private fun QuickExecuteDialog(
 @Composable
 private fun ExecutionResultDialog(
     state: TerminalState,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    terminalViewModel: TerminalViewModel
 ) {
     val result = state.result
     val context = LocalContext.current
@@ -686,11 +686,18 @@ private fun ExecutionResultDialog(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 200.dp, max = 400.dp),
+                        .heightIn(min = 200.dp, max = (LocalConfiguration.current.screenHeightDp * 0.35f).dp),
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = AppShape.shapes.dialogContent
                 ) {
                     val scrollState = rememberScrollState()
+
+                    LaunchedEffect(output) {
+                        if (state.isRunning) {
+                            scrollState.animateScrollTo(scrollState.maxValue)
+                        }
+                    }
+
                     SelectionContainer {
                         Text(
                             text = output,
@@ -708,9 +715,15 @@ private fun ExecutionResultDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
-                    if (!state.isRunning) {
+                    if (state.isRunning) {
+                        TextButton(
+                            onClick = { terminalViewModel.cancelExecution() }
+                        ) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                    } else {
                         TextButton(
                             onClick = onDismiss
                         ) {
