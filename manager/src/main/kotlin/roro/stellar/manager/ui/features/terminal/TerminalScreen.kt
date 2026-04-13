@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -685,7 +686,7 @@ private fun ExecutionResultDialog(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 200.dp, max = 400.dp),
+                        .heightIn(min = 200.dp, max = (LocalConfiguration.current.screenHeightDp * 0.35f).dp),
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = AppShape.shapes.dialogContent
                 ) {
